@@ -4,18 +4,27 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server",
+    "start:server": "babel-node -- ./server.js",
     "buildproto": "protoc --js_out=protobuild --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@grpc/grpc-js": "^0.3.6",
     "@grpc/proto-loader": "^0.4.0",
     "google-protobuf": "^3.7.1",
-    "grpc": "^1.19.0"
+    "grpc": "^1.19.0",
+    "mali": "^0.14.0",
+    "pbf": "^3.2.0",
+    "protobufjs": "^6.8.8"
   },
   "devDependencies": {
-    "grpc-tools": "^1.7.2"
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.4.3",
+    "grpc-tools": "^1.7.2",
+    "replace-in-file": "^3.4.4"
   }
 }

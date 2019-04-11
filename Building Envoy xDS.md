@@ -10,6 +10,18 @@ Which puts the files here:
 
 https://github.com/envoyproxy/java-control-plane/tree/master/api/src/main/proto
 
+## Remove custom syntax
+
+Lyft use https://github.com/envoyproxy/protoc-gen-validate
+which supports custom "options" syntax for building validation classes from the source.
+
+While `protoc` supports the syntax, no decent Javascript proto compiler does. So we alter the proto files by the following script:
+
+	// Remove lyft validate messages
+	docker run -it --entrypoint=/bin/sh -v `pwd`:/files hairyhenderson/sed
+	
+	find /files -type f -name "*.proto" -exec sed -i -r -s 's/option\s+\(validate\.required\).*;|\[\(validate\.rules\)[^]]+\]//' {} \;
+
 ## Compiling for node
 
 	npm install -g grpc-tools
