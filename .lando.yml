@@ -1,0 +1,8 @@
+name: envoy-test
+services:
+  controller:
+    type: node
+    port: 50051 
+    command: npm rebuild && npm run start:server
+  frontenvoy:
+    type: envoy

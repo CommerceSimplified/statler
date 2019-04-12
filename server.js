@@ -19,9 +19,19 @@ const RouteDiscoveryService = {
         responseSerialize: function(arg) { return envoy.api.v2.DiscoveryResponse.encode(arg).finish() },
         responseDeserialize: function(buffer_arg) { return envoy.api.v2.DiscoveryRequest.decode(buffer_arg) },
     },
+    streamRoutes: {
+        path: '/envoy.api.v2.RouteDiscoveryService/StreamRoutes',
+        requestStream: true,
+        responseStream: true,
+        requestType: envoy.api.v2.DiscoveryRequest,
+        responseType: envoy.api.v2.DiscoveryResponse,
+        requestSerialize: function(arg) { return envoy.api.v2.DiscoveryRequest.encode(arg).finish() },
+        requestDeserialize: function(buffer_arg) { return envoy.api.v2.DiscoveryRequest.decode(buffer_arg) },
+        responseSerialize: function(arg) { return envoy.api.v2.DiscoveryResponse.encode(arg).finish() },
+        responseDeserialize: function(buffer_arg) { return envoy.api.v2.DiscoveryRequest.decode(buffer_arg) },
+    }
 };
 
-envoy.api.v2.core.ConfigSource
 
 /**
  * Packs message into an any type.
@@ -37,12 +47,32 @@ function packAny(message, typeUrl) {
 }
 
 /**
+ *
+ * @param {Duplex} call - the call stream
+ */
+function streamRoutes(call) {
+
+
+    call.on('data', /** @type envoy.api.v2.DiscoveryRequest */ discoveryRequest => {
+
+        console.log(discoveryRequest.resourceNames);
+
+    });
+    call.on('end', function() {
+        call.end();
+    });
+}
+
+/**
  * Service implementation.
  * @param call
  * @param callback
  */
 function fetchRoutes(call, callback) {
-    // console.log(call);
+
+    console.log("\n");
+    console.log(call);
+    console.log("\n");
 
     const payload = {
        name: 'my_magic_route',
@@ -90,7 +120,8 @@ function fetchRoutes(call, callback) {
 const server = new grpc.Server();
 
 server.addService(RouteDiscoveryService, {
-    fetchRoutes: fetchRoutes
+    fetchRoutes: fetchRoutes,
+    streamRoutes: streamRoutes,
 });
 
 server.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());

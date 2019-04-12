@@ -1,4 +1,4 @@
-## Building Envoy xDS proto
+## Building Envoy xDS proto files
 
 Follow the Java Control Plane example for collecting all proto files:
 https://github.com/envoyproxy/java-control-plane
