@@ -1,3 +1,4 @@
+# A bootstrap config file that contacts our RDS implementation for route discovery.
 node:
   id: awesome
   cluster: awesomecluster
@@ -20,7 +21,7 @@ static_resources:
           stat_prefix: ingress_http
           codec_type: AUTO
           rds:
-            route_config_name: some_route_name
+            route_config_name: our_test_route_config
             config_source:
               api_config_source:
                 api_type: GRPC
@@ -31,6 +32,7 @@ static_resources:
           - name: envoy.router
 
   clusters:
+    # A static cluster representing our RDS service.
     - name: xds_cluster
       connect_timeout: 0.25s
       type: LOGICAL_DNS
@@ -47,5 +49,6 @@ static_resources:
           - endpoint:
               address:
                 socket_address:
+                  # The lando service address
                   address: controller.envoytest.internal
                   port_value: 50051

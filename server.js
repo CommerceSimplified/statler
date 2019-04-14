@@ -55,7 +55,53 @@ function streamRoutes(call) {
 
     call.on('data', /** @type envoy.api.v2.DiscoveryRequest */ discoveryRequest => {
 
-        console.log(discoveryRequest.resourceNames);
+        console.log('call received:');
+        console.log(discoveryRequest);
+
+        // The node making the request.
+        const node = discoveryRequest.node;
+
+        // The list of resource names the node is subscribing to.
+        const resourceNames = discoveryRequest.resourceNames;
+
+        const routeConfigPayload = {
+            name: 'our_test_route_config', // The requested route config name
+            virtualHosts: [
+                {
+                    name: 'Some Virtual Host',
+                    domains: ['*'],
+                    routes: [
+                        {
+                            match: {
+                                prefix: '/',
+                            },
+                            route: {
+                                cluster: 'xds_cluster'
+                            },
+                        },
+                    ],
+                },
+            ]
+        };
+        const routeConfiguration = envoy.api.v2.RouteConfiguration.create(routeConfigPayload);
+        const packedRouteConfiguration = packAny(routeConfiguration,'type.googleapis.com/envoy.api.v2.RouteConfiguration');
+
+        let response = envoy.api.v2.DiscoveryResponse.create({
+            versionInfo: '0',
+            canary: false,
+            typeUrl: 'type.googleapis.com/envoy.api.v2.RouteConfiguration',
+            resources: [
+                packedRouteConfiguration
+            ],
+        });
+
+        console.log('sending response');
+        console.log(response);
+
+        const encoded = envoy.api.v2.DiscoveryResponse.encode(response).finish();
+        console.log(JSON.stringify(envoy.api.v2.DiscoveryResponse.decode(encoded).toJSON()));
+
+        call.write(response);
 
     });
     call.on('end', function() {
