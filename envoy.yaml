@@ -27,12 +27,13 @@ static_resources:
                 api_type: GRPC
                 grpc_services:
                   envoy_grpc:
+                    # will maintain connection based on cluster below.
                     cluster_name: xds_cluster
           http_filters:
           - name: envoy.router
 
   clusters:
-    # A static cluster representing our RDS service.
+    # A static cluster representing our RDS (soon xDS) service.
     - name: xds_cluster
       connect_timeout: 0.25s
       type: LOGICAL_DNS
@@ -57,7 +58,6 @@ static_resources:
     - name: service_google
       connect_timeout: 0.25s
       type: LOGICAL_DNS
-      # Comment out the following line to test on v6 networks
       dns_lookup_family: V4_ONLY
       lb_policy: ROUND_ROBIN
       load_assignment:

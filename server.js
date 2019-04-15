@@ -8,6 +8,7 @@ import * as grpc from 'grpc';
  * @type {{fetchRoutes: {path: string, responseType: envoy.api.v2.DiscoveryResponse, requestType: envoy.api.v2.DiscoveryRequest, responseStream: boolean, responseSerialize: (function(*=): Uint8Array), responseDeserialize: (function(*=): envoy.api.v2.DiscoveryRequest), requestStream: boolean, requestSerialize: (function(*=): Uint8Array), requestDeserialize: (function(*=): envoy.api.v2.DiscoveryRequest)}}}
  */
 const RouteDiscoveryService = {
+    // Not sure when this one would ever be used.
     fetchRoutes: {
         path: '/envoy.api.v2.RouteDiscoveryService/FetchRoutes',
         requestStream: false,
@@ -80,23 +81,28 @@ function streamRoutes(call) {
                     domains: ['*'],
                     routes: [
                         {
+                            // Will route '/' on local to '/services' on google.
                             match: {
                                 prefix: '/',
                             },
                             route: {
-                                host_rewrite: 'www.google.com',
-                                cluster: 'service_google'
+                                cluster: 'service_google',
+                                hostRewrite: 'www.google.com',
                             },
                         },
                     ],
                 },
             ]
         };
-        const routeConfiguration = envoy.api.v2.RouteConfiguration.create(routeConfigPayload);
+
+        // const routeConfiguration = envoy.api.v2.RouteConfiguration.create(routeConfigPayload);
+        // const encodedRouteConfig = envoy.api.v2.RouteConfiguration.encode(routeConfiguration).finish();
+        // console.log(JSON.stringify(envoy.api.v2.RouteConfiguration.decode(encodedRouteConfig).toJSON()));
+
         const packedRouteConfiguration = packAny(routeConfiguration,'type.googleapis.com/envoy.api.v2.RouteConfiguration');
 
         let response = envoy.api.v2.DiscoveryResponse.create({
-            versionInfo: '0',
+            versionInfo: '2',
             canary: false,
             // Envoy needs this to know what config it's receiving.
             typeUrl: 'type.googleapis.com/envoy.api.v2.RouteConfiguration',
@@ -111,6 +117,7 @@ function streamRoutes(call) {
         const encoded = envoy.api.v2.DiscoveryResponse.encode(response).finish();
         console.log(JSON.stringify(envoy.api.v2.DiscoveryResponse.decode(encoded).toJSON()));
 
+        // Send the response
         call.write(response);
 
         done = true;
