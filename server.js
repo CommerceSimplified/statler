@@ -46,6 +46,8 @@ function packAny(message, typeUrl) {
     });
 }
 
+let done = false;
+
 /**
  *
  * @param {Duplex} call - the call stream
@@ -58,6 +60,12 @@ function streamRoutes(call) {
         console.log('call received:');
         console.log(discoveryRequest);
 
+
+
+        if (done) {
+            return;
+        }
+
         // The node making the request.
         const node = discoveryRequest.node;
 
@@ -65,10 +73,10 @@ function streamRoutes(call) {
         const resourceNames = discoveryRequest.resourceNames;
 
         const routeConfigPayload = {
-            name: 'our_test_route_config', // The requested route config name
+            name: 'demo_route_config', // The requested route config name
             virtualHosts: [
                 {
-                    name: 'Some Virtual Host',
+                    name: 'Google Proxy Virtual Host',
                     domains: ['*'],
                     routes: [
                         {
@@ -76,7 +84,8 @@ function streamRoutes(call) {
                                 prefix: '/',
                             },
                             route: {
-                                cluster: 'xds_cluster'
+                                host_rewrite: 'www.google.com',
+                                cluster: 'service_google'
                             },
                         },
                     ],
@@ -89,6 +98,7 @@ function streamRoutes(call) {
         let response = envoy.api.v2.DiscoveryResponse.create({
             versionInfo: '0',
             canary: false,
+            // Envoy needs this to know what config it's receiving.
             typeUrl: 'type.googleapis.com/envoy.api.v2.RouteConfiguration',
             resources: [
                 packedRouteConfiguration
@@ -102,6 +112,8 @@ function streamRoutes(call) {
         console.log(JSON.stringify(envoy.api.v2.DiscoveryResponse.decode(encoded).toJSON()));
 
         call.write(response);
+
+        done = true;
 
     });
     call.on('end', function() {
