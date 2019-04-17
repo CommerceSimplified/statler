@@ -1,0 +1,73 @@
+# A bootstrap config file that contacts our RDS implementation for route discovery.
+node:
+  id: awesome
+  cluster: awesomecluster
+
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
+
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 10000 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          stat_prefix: ingress_http
+          codec_type: AUTO
+          rds:
+            route_config_name: demo_route_config
+            config_source:
+              api_config_source:
+                api_type: GRPC
+                grpc_services:
+                  envoy_grpc:
+                    # will maintain connection based on cluster below.
+                    cluster_name: xds_cluster
+          http_filters:
+          - name: envoy.router
+
+  clusters:
+    # A static cluster representing our RDS (soon xDS) service.
+    - name: xds_cluster
+      connect_timeout: 0.25s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      http2_protocol_options: {}
+      upstream_connection_options:
+        # configure a TCP keep-alive to detect and reconnect to the admin
+        # server in the event of a TCP socket half open connection
+        tcp_keepalive: {}
+      load_assignment:
+        cluster_name: xds_cluster
+        endpoints:
+        - lb_endpoints:
+          - endpoint:
+              address:
+                socket_address:
+                  # The lando service address / port of our node controller.
+                  address: controller.envoytest.internal
+                  port_value: 50051
+
+    # Statically add this cluster for routing demo purposes.
+#    - name: service_google
+#      connect_timeout: 0.25s
+#      type: LOGICAL_DNS
+#      dns_lookup_family: V4_ONLY
+#      lb_policy: ROUND_ROBIN
+#      load_assignment:
+#        cluster_name: service_google
+#        endpoints:
+#        - lb_endpoints:
+#          - endpoint:
+#              address:
+#                socket_address:
+#                  address: www.google.com
+#                  port_value: 443
+#      tls_context:
+#        sni: www.google.com
